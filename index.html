@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PUREBRUSH - แปรงสีฟันเพื่อสุขภาพช่องปาก</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Prompt', sans-serif; }
+    @media print {
+      body * { visibility: hidden; }
+      #print-label-area, #print-label-area * { visibility: visible; }
+      #print-label-area { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl font-bold text-teal-600">🦷 PUREBRUSH</span>
+      </div>
+      <div class="space-x-2">
+        <button onclick="switchTab('store')" id="btn-store" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-medium text-sm">หน้าร้านค้า</button>
+        <button onclick="switchTab('warehouse')" id="btn-warehouse" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium text-sm">ระบบคลัง (Pick & Pack)</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== 1. ส่วนหน้าร้านค้า (LANDING PAGE) ==================== -->
+  <div id="view-store">
+    <header class="bg-gradient-to-r from-teal-600 to-emerald-500 text-white py-16 px-4">
+      <div class="max-w-5xl mx-auto text-center">
+        <span class="bg-white/20 text-sm px-3 py-1 rounded-full">นวัตกรรมดูแลช่องปากระดับพรีเมียม</span>
+        <h1 class="text-4xl md:text-5xl font-bold mt-4 mb-4">ยิ้มมั่นใจ สะอาดล้ำลึกทุกซอกฟัน</h1>
+        <p class="text-lg text-teal-50 max-w-2xl mx-auto mb-8">ออกแบบโดยทันตแพทย์ ขนแปรงนุ่มพิเศษไม่ทำร้ายเหงือก มีให้เลือกทั้งรุ่นมาตรฐานและรุ่นระบบสั่น Sonic</p>
+        <a href="#products-section" class="bg-white text-teal-700 font-bold px-8 py-3 rounded-full shadow-lg hover:bg-teal-50 transition">เลือกซื้อสินค้าเลย</a>
+      </div>
+    </header>
+
+    <main id="products-section" class="max-w-6xl mx-auto px-4 py-12">
+      <h2 class="text-2xl font-bold text-center mb-8">เลือกรุ่นแปรงสีฟันที่เหมาะกับคุณ</h2>
+      
+      <!-- Loading / Error State -->
+      <div id="loading-products" class="text-center py-8 px-4 rounded-xl bg-white border border-slate-200 max-w-2xl mx-auto mb-8 text-slate-600">
+        กำลังโหลดข้อมูลสินค้าจาก Google Sheets...
+      </div>
+
+      <!-- Product Grid -->
+      <div id="product-list" class="grid md:grid-cols-2 gap-8 mb-12"></div>
+
+      <!-- Checkout Section -->
+      <div class="bg-white p-6 md:p-8 rounded-2xl shadow-md max-w-3xl mx-auto border border-slate-100">
+        <h3 class="text-xl font-bold mb-4 border-b pb-3">🛒 สรุปรายการสั่งซื้อและที่อยู่จัดส่ง</h3>
+        
+        <div id="cart-items" class="mb-6 space-y-2 text-sm text-slate-600">
+          <p class="text-slate-400 italic">ยังไม่ได้เลือกสินค้า กรุณากดเพิ่มสินค้าด้านบน</p>
+        </div>
+        
+        <div class="flex justify-between items-center text-lg font-bold bg-slate-50 p-4 rounded-xl mb-6">
+          <span>ยอดชำระทั้งหมด:</span>
+          <span id="cart-total" class="text-teal-600 text-2xl">฿0</span>
+        </div>
+
+        <form id="order-form" onsubmit="submitOrder(event)" class="space-y-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">ชื่อ-นามสกุล ผู้รับ *</label>
+              <input type="text" id="cust-name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="เช่น สมชาย ใจดี">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">เบอร์โทรศัพท์ *</label>
+              <input type="tel" id="cust-phone" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="08X-XXX-XXXX">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">ที่อยู่จัดส่ง (พร้อมรหัสไปรษณีย์) *</label>
+            <textarea id="cust-address" rows="3" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="บ้านเลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์"></textarea>
+          </div>
+          <button type="submit" id="btn-submit-order" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow transition">
+            ยืนยันการสั่งซื้อ
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== 2. ส่วนระบบคลังสินค้า (PICKING & PACKING) ==================== -->
+  <div id="view-warehouse" class="hidden max-w-6xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-2xl font-bold">📦 ระบบจัดการคลังสินค้า (Picking & Packing)</h2>
+        <p class="text-sm text-slate-500">ดึงข้อมูลแบบ Real-time จาก Google Sheets</p>
+      </div>
+      <button onclick="loadOrders()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-700">🔄 รีเฟรชออเดอร์</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+      <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+        <div class="text-amber-700 text-sm font-medium">1. รอหยิบสินค้า (Picking)</div>
+        <div id="count-pick" class="text-2xl font-bold text-amber-800">0</div>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+        <div class="text-blue-700 text-sm font-medium">2. กำลังแพ็ก (Packing)</div>
+        <div id="count-pack" class="text-2xl font-bold text-blue-800">0</div>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+        <div class="text-emerald-700 text-sm font-medium">3. พร้อมส่ง/จัดส่งแล้ว</div>
+        <div id="count-ship" class="text-2xl font-bold text-emerald-800">0</div>
+      </div>
+    </div>
+
+    <div id="orders-container" class="space-y-4"></div>
+  </div>
+
+  <!-- Modal สำหรับพิมพ์ใบปะหน้าพัสดุ -->
+  <div id="label-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6">
+      <div id="print-label-area" class="border-2 border-black p-4 rounded">
+        <div class="flex justify-between border-b-2 border-black pb-2 mb-3">
+          <span class="font-bold text-lg">PUREBRUSH EXPRESS</span>
+          <span id="lbl-orderid" class="font-mono font-bold"></span>
+        </div>
+        <div class="text-xs mb-2">
+          <strong>ผู้ส่ง:</strong> คลังสินค้า PUREBRUSH กรุงเทพฯ 10110
+        </div>
+        <div class="border-t border-dashed border-slate-400 pt-2 mb-3">
+          <div class="text-xs text-slate-500">ผู้รับ (TO):</div>
+          <div id="lbl-name" class="font-bold text-base"></div>
+          <div id="lbl-phone" class="text-sm font-medium"></div>
+          <div id="lbl-address" class="text-sm mt-1"></div>
+        </div>
+        <div class="bg-slate-100 p-2 text-xs border border-slate-300">
+          <strong>รายการในกล่อง (Packing List):</strong>
+          <div id="lbl-items" class="mt-1 font-mono"></div>
+        </div>
+        <div class="mt-3 pt-2 border-t border-black flex justify-between items-center text-xs">
+          <span>Tracking: <strong id="lbl-tracking"></strong></span>
+          <span>ยอดชำระ: <strong id="lbl-total"></strong></span>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-4">
+        <button onclick="document.getElementById('label-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 rounded-lg text-sm">ปิด</button>
+        <button onclick="window.print()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold">🖨️ พิมพ์ใบปะหน้า</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbypCBdajQ7X7LCwYyQ0FwwSFf9VYL7SmiGs0dWTQI3G0HOKyJDU37NqS7QXA8qiccyNbA/exec';
+
+    let products = [];
+    let cart = {};
+    let orders = [];
+
+    function switchTab(tab) {
+      document.getElementById('view-store').classList.toggle('hidden', tab !== 'store');
+      document.getElementById('view-warehouse').classList.toggle('hidden', tab !== 'warehouse');
+      
+      document.getElementById('btn-store').className = tab === 'store' 
+        ? 'px-4 py-2 rounded-lg bg-teal-600 text-white font-medium text-sm' 
+        : 'px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium text-sm';
+      document.getElementById('btn-warehouse').className = tab === 'warehouse' 
+        ? 'px-4 py-2 rounded-lg bg-teal-600 text-white font-medium text-sm' 
+        : 'px-4 py-2 rounded-lg bg-slate-200 text-slate-700 font-medium text-sm';
+
+      if (tab === 'warehouse') loadOrders();
+    }
+
+    async function loadProducts() {
+      const statusBox = document.getElementById('loading-products');
+      try {
+        const res = await fetch(`${API_URL}?action=getProducts`, { redirect: 'follow' });
+        const json = await res.json();
+        
+        if (json.status === 'error') {
+          statusBox.innerHTML = `<span class="text-red-600 font-bold">❌ ข้อผิดพลาดจาก Google Sheets:</span> ${json.message}`;
+          return;
+        }
+
+        products = json.data || [];
+        if (products.length === 0) {
+          statusBox.innerHTML = `
+            <div class="text-amber-700 font-bold mb-1">⚠️ เชื่อมต่อสำเร็จ แต่ยังไม่มีรายการสินค้าใน Google Sheets</div>
+            <div class="text-sm">กรุณาตรวจสอบแท็บ <strong>Products</strong> ว่ามีหัวตารางแถวที่ 1 (SKU, Name, Description, Price, Stock, Image, Location) และมีข้อมูลสินค้าในแถวที่ 2 เป็นต้นไป</div>
+          `;
+          return;
+        }
+
+        statusBox.classList.add('hidden');
+        renderProducts();
+      } catch (err) {
+        statusBox.innerHTML = `
+          <div class="text-red-600 font-bold mb-1">❌ ไม่สามารถเชื่อมต่อกับ Google Apps Script ได้</div>
+          <div class="text-sm text-left mt-2 space-y-1">
+            <p><strong>วิธีแก้ไข:</strong></p>
+            <p>1. กลับไปที่หน้า Google Apps Script กด <strong>Deploy > Manage deployments</strong></p>
+            <p>2. กดรูปดินสอ (Edit) ตรงช่อง <strong>Who has access</strong> ต้องเลือกเป็น <strong>Anyone (ทุกคน)</strong> เท่านั้น แล้วกด Deploy ใหม่</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('product-list');
+      container.innerHTML = products.map(p => `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+          <img src="${p.Image || ''}" alt="${p.Name || ''}" onerror="this.src='https://placehold.co/600x400?text=${p.SKU || 'Product'}'" class="w-full h-64 object-cover bg-slate-100">
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded">SKU: ${p.SKU || '-'}</span>
+                <span class="text-xs font-medium ${Number(p.Stock) > 0 ? 'text-emerald-600' : 'text-red-500'}">คงเหลือ: ${p.Stock || 0} ชิ้น</span>
+              </div>
+              <h3 class="text-xl font-bold mt-2">${p.Name || 'ไม่มีชื่อสินค้า'}</h3>
+              <p class="text-slate-500 text-sm mt-1">${p.Description || ''}</p>
+            </div>
+            <div class="mt-6 flex items-center justify-between border-t pt-4">
+              <span class="text-2xl font-bold text-teal-600">฿${p.Price || 0}</span>
+              <div class="flex items-center space-x-2">
+                <button onclick="updateCart('${p.SKU}', -1)" class="w-8 h-8 rounded-full bg-slate-200 font-bold hover:bg-slate-300">-</button>
+                <span id="qty-${p.SKU}" class="w-8 text-center font-bold">${cart[p.SKU] || 0}</span>
+                <button onclick="updateCart('${p.SKU}', 1)" ${Number(p.Stock) <= 0 ? 'disabled' : ''} class="w-8 h-8 rounded-full bg-teal-600 text-white font-bold hover:bg-teal-700 disabled:bg-slate-300">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateCart(sku, delta) {
+      const product = products.find(p => String(p.SKU) === String(sku));
+      if (!product) return;
+      const current = cart[sku] || 0;
+      const next = current + delta;
+      if (next < 0 || next > Number(product.Stock)) return;
+      
+      if (next === 0) delete cart[sku];
+      else cart[sku] = next;
+      
+      document.getElementById(`qty-${sku}`).innerText = cart[sku] || 0;
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const skus = Object.keys(cart);
+      if (skus.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 italic">ยังไม่ได้เลือกสินค้า กรุณากดเพิ่มสินค้าด้านบน</p>';
+        document.getElementById('cart-total').innerText = '฿0';
+        return;
+      }
+
+      let total = 0;
+      container.innerHTML = skus.map(sku => {
+        const p = products.find(item => String(item.SKU) === String(sku));
+        const subtotal = Number(p.Price) * cart[sku];
+        total += subtotal;
+        return `<div class="flex justify-between py-1 border-b border-slate-100">
+          <span>${p.Name} <span class="text-xs text-slate-400">(${sku})</span> x ${cart[sku]}</span>
+          <span class="font-medium">฿${subtotal}</span>
+        </div>`;
+      }).join('');
+      document.getElementById('cart-total').innerText = `฿${total}`;
+    }
+
+    async function submitOrder(e) {
+      e.preventDefault();
+      const skus = Object.keys(cart);
+      if (skus.length === 0) return alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ');
+
+      const btn = document.getElementById('btn-submit-order');
+      btn.disabled = true;
+      btn.innerText = 'กำลังบันทึกคำสั่งซื้อ...';
+
+      let total = 0;
+      const items = skus.map(sku => {
+        const p = products.find(item => String(item.SKU) === String(sku));
+        total += Number(p.Price) * cart[sku];
+        return { sku: p.SKU, name: p.Name, qty: cart[sku], location: p.Location || 'N/A' };
+      });
+
+      const payload = {
+        action: 'createOrder',
+        customerName: document.getElementById('cust-name').value,
+        phone: document.getElementById('cust-phone').value,
+        address: document.getElementById('cust-address').value,
+        items: items,
+        total: total
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          alert(`สั่งซื้อสำเร็จ! รหัสคำสั่งซื้อของคุณคือ ${json.orderId}`);
+          cart = {};
+          document.getElementById('order-form').reset();
+          renderCart();
+          loadProducts();
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + json.message);
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'ยืนยันการสั่งซื้อ';
+      }
+    }
+
+    async function loadOrders() {
+      const container = document.getElementById('orders-container');
+      container.innerHTML = '<div class="text-center py-8 text-slate-500">กำลังโหลดรายการคำสั่งซื้อ...</div>';
+      
+      try {
+        const res = await fetch(`${API_URL}?action=getOrders`, { redirect: 'follow' });
+        const json = await res.json();
+        orders = json.data || [];
+
+        let cPick = 0, cPack = 0, cShip = 0;
+        orders.forEach(o => {
+          if (o.Status === 'PENDING_PICK') cPick++;
+          else if (o.Status === 'PICKED_PACKING') cPack++;
+          else cShip++;
+        });
+        document.getElementById('count-pick').innerText = cPick;
+        document.getElementById('count-pack').innerText = cPack;
+        document.getElementById('count-ship').innerText = cShip;
+
+        if (orders.length === 0) {
+          container.innerHTML = '<div class="text-center py-8 text-slate-400">ยังไม่มีรายการคำสั่งซื้อ</div>';
+          return;
+        }
+
+        container.innerHTML = orders.map(o => {
+          let badge = '';
+          let actionBtn = '';
+
+          if (o.Status === 'PENDING_PICK') {
+            badge = '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold">1. รอหยิบสินค้า (Picking)</span>';
+            actionBtn = `<button onclick="updateOrderStatus('${o.OrderID}', 'PICKED_PACKING')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold">✅ ยืนยันหยิบสินค้าครบแล้ว -> ไปแพ็ก</button>`;
+          } else if (o.Status === 'PICKED_PACKING') {
+            badge = '<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold">2. กำลังแพ็กพัสดุ (Packing)</span>';
+            actionBtn = `
+              <div class="flex flex-wrap gap-2 items-center">
+                <input type="text" id="track-${o.OrderID}" placeholder="ระบุเลขพัสดุ (Tracking)" class="border rounded-lg px-3 py-1.5 text-sm">
+                <button onclick="completePacking('${o.OrderID}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold">📦 แพ็กเสร็จ & บันทึกเลขพัสดุ</button>
+              </div>`;
+          } else {
+            badge = '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">3. พร้อมจัดส่งแล้ว</span>';
+            actionBtn = `<button onclick="openPrintLabel('${o.OrderID}')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold">🖨️ พิมพ์ใบปะหน้าพัสดุ</button>`;
+          }
+
+          return `
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+              <div class="flex flex-wrap justify-between items-start gap-2 border-b pb-3 mb-3">
+                <div>
+                  <span class="font-mono font-bold text-lg text-teal-700">${o.OrderID}</span>
+                  <span class="text-xs text-slate-400 ml-2">${o.Timestamp}</span>
+                </div>
+                ${badge}
+              </div>
+              
+              <div class="bg-slate-50 p-3 rounded-lg mb-3 border border-slate-200">
+                <div class="text-xs font-bold text-slate-500 uppercase mb-1">📋 รายการหยิบสินค้า (Picking List & Shelf Location):</div>
+                <div class="font-mono text-sm font-semibold text-slate-800">${o.Items}</div>
+              </div>
+
+              <div class="flex flex-wrap justify-between items-end gap-4">
+                <div class="text-sm">
+                  <div><strong>ผู้รับ:</strong> ${o.CustomerName} (${o.Phone})</div>
+                  <div class="text-slate-600"><strong>ที่อยู่:</strong> ${o.Address}</div>
+                  ${o.TrackingNo ? `<div class="text-emerald-700 font-bold mt-1">Tracking No: ${o.TrackingNo}</div>` : ''}
+                </div>
+                <div>${actionBtn}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = '<div class="text-center py-8 text-red-500">ไม่สามารถโหลดข้อมูลออเดอร์ได้</div>';
+      }
+    }
+
+    async function updateOrderStatus(orderId, newStatus, trackingNo = '') {
+      await fetch(API_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'updateStatus', orderId, newStatus, trackingNo })
+      });
+      loadOrders();
+    }
+
+    function completePacking(orderId) {
+      const tracking = document.getElementById(`track-${orderId}`).value.trim();
+      if (!tracking) return alert('กรุณากรอกเลขพัสดุ (Tracking Number) ก่อนยืนยันการแพ็ก');
+      updateOrderStatus(orderId, 'READY_TO_SHIP', tracking);
+    }
+
+    function openPrintLabel(orderId) {
+      const o = orders.find(item => String(item.OrderID) === String(orderId));
+      document.getElementById('lbl-orderid').innerText = o.OrderID;
+      document.getElementById('lbl-name').innerText = o.CustomerName;
+      document.getElementById('lbl-phone').innerText = `โทร: ${o.Phone}`;
+      document.getElementById('lbl-address').innerText = o.Address;
+      document.getElementById('lbl-items').innerText = o.Items;
+      document.getElementById('lbl-tracking').innerText = o.TrackingNo || '-';
+      document.getElementById('lbl-total').innerText = `฿${o.Total}`;
+      document.getElementById('label-modal').classList.remove('hidden');
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
